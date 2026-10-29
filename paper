@@ -1,1 +1,401 @@
+Parametric Memory Alignment: Replacing Token Retention with Continual Parameter Adaptation for Long-Context Reasoning
 
+King Tim Leung
+ Independent Researcher, Hong Kong SAR
+ ORCID: 0009-0000-3340-0033
+
+Abstract
+
+Modern transformer-based language models rely on token retention mechanisms, including attention states, hidden states, and Key-Value (KV) caches, to perform long-context reasoning. While scaling context windows has improved performance, memory consumption grows with sequence length and increasingly large contexts exhibit diminishing reasoning efficiency. Existing approaches such as Recurrent Memory Transformers (RMT), Infini-Attention, and Titans seek to alleviate these limitations through recurrent memory, compressive memory, or neural memory modules, yet they remain fundamentally anchored to token-derived representations.
+
+This paper introduces Parametric Memory Alignment (PMA), a conceptual framework based on a different hypothesis:
+
+Memory should be represented by adaptive parameters rather than preserved tokens.
+
+Instead of storing historical information as retained token representations, PMA continuously transforms experience into memory parameters through online adaptation. Queries retrieve relevant information by interacting with adaptive memory parameters that dynamically reconstruct task-relevant memory representations.
+
+We formulate long-context reasoning as a continual parameter adaptation problem, derive the resulting memory complexity, and present a theoretical architecture called the Hypercycle Transformer. Unlike token-centric architectures, PMA proposes a parameter-centric memory paradigm in which long-term memory emerges from adaptive neural state rather than explicit token preservation.
+
+1. Introduction
+
+Transformer architectures have become the dominant paradigm for sequence modeling and large language models. The success of transformers derives largely from self-attention, which enables direct access to historical tokens through learned similarity functions.
+
+For an input sequence
+
+X=(x1,x2,…,xn),X=(x_1,x_2,\ldots,x_n),X=(x1​,x2​,…,xn​),
+
+standard self-attention computes
+
+Att(Q,K,V)=softmax(QKTd)V.\mathrm{Att}(Q,K,V) = \mathrm{softmax} \left( \frac{QK^T}{\sqrt d} \right)V.Att(Q,K,V)=softmax(d​QKT​)V.
+
+In autoregressive inference, all previously generated key-value pairs must remain accessible.
+
+Consequently, memory requirements scale with context length:
+
+MKV=O(nLd),M_{\text{KV}} = \mathcal O(nLd),MKV​=O(nLd),
+
+where:
+
+nnn is the context length,
+LLL is the number of transformer layers,
+ddd is the hidden dimensionality.
+
+As context windows extend from thousands to millions of tokens, KV storage becomes a primary inference bottleneck. Furthermore, empirical studies have shown that simply increasing context length does not necessarily improve reasoning performance. Long-context models frequently exhibit retrieval degradation, information dilution, and "lost-in-the-middle" effects.
+
+The prevailing assumption underlying these architectures is:
+
+Historical information must be preserved as token representations.
+
+This paper challenges that assumption.
+
+Instead, we investigate the alternative hypothesis:
+
+Historical information should be consolidated into adaptive parameters rather than preserved as explicit token states.
+
+2. Background and Related Work
+2.1 Attention-Based Memory
+
+The original Transformer architecture stores information implicitly through attention over retained token representations.
+
+The model's memory is effectively the set of accessible historical tokens and their associated internal states.
+
+Reference
+
+Vaswani et al. (2017).
+
+Attention Is All You Need.
+
+DOI: 10.48550/arXiv.1706.03762
+
+2.2 Recurrent Memory Architectures
+
+Recurrent Memory Transformer (RMT) introduces memory tokens that propagate information across segments, enabling long-range dependencies without storing an entire sequence directly. However, memory remains represented as token-level embeddings.
+
+2.3 Compressive Memory
+
+Infini-Attention introduces compressive memory structures that summarize historical information while maintaining bounded computation. Nevertheless, memory remains derived from compressed token representations.
+
+2.4 Neural Memory
+
+Titans introduces a neural long-term memory module capable of memorization during inference and maintains a distinction between attention-based short-term memory and neural long-term memory.
+
+Despite significant advances, existing methods continue to represent memory as either:
+
+token states,
+hidden states,
+compressed token summaries,
+retrieved token memories.
+
+No dominant architecture currently treats adaptive parameters themselves as the primary memory substrate.
+
+3. Core Hypothesis
+3.1 Memory as Adaptive Parameters
+
+Let
+
+Ht={x1,x2,…,xt}H_t = \{x_1,x_2,\ldots,x_t\}Ht​={x1​,x2​,…,xt​}
+
+denote historical experience.
+
+Traditional models assume:
+
+Ht→MtH_t \rightarrow \mathcal M_tHt​→Mt​
+
+where
+
+Mt\mathcal M_tMt​
+
+is a retained token memory.
+
+Parametric Memory Alignment instead assumes:
+
+Ht→θt,H_t \rightarrow \theta_t,Ht​→θt​,
+
+where
+
+θt\theta_tθt​
+
+represents adaptive memory parameters.
+
+Memory is therefore stored in model parameters rather than preserved token states.
+
+3.2 The Memory Formation Principle
+
+We define the central principle of PMA:
+
+Principle 1 (Memory Formation)
+
+An intelligent system should transform historical observations into adaptive parameters whose future behavior preserves relevant information.
+
+Formally,
+
+θt=U(Ht,θt−1),\theta_t = \mathcal U(H_t,\theta_{t-1}),θt​=U(Ht​,θt−1​),
+
+where
+
+U\mathcal UU
+
+is a memory update operator.
+
+This differs fundamentally from token retention:
+
+Ht≠Stored TokensH_t \neq \text{Stored Tokens}Ht​=Stored Tokens
+
+but instead
+
+Ht≈Memory Parameters.H_t \approx \text{Memory Parameters}.Ht​≈Memory Parameters.
+4. Hypercycle Transformer
+4.1 Architectural Motivation
+
+Human cognition appears to separate:
+
+working memory,
+long-term memory,
+memory consolidation.
+
+Inspired by this observation, PMA proposes two interacting subsystems:
+
+Reasoning Core
+
+Responsible for:
+
+language modeling,
+planning,
+inference,
+chain-of-thought operations.
+Memory Core
+
+Responsible for:
+
+memory formation,
+memory consolidation,
+memory adaptation,
+memory pruning.
+4.2 Hypercycle Dynamics
+
+The complete system forms a recurrent cycle:
+
+Reasoning→Memory→Reasoning.\text{Reasoning} \to \text{Memory} \to \text{Reasoning}.Reasoning→Memory→Reasoning.
+
+At timestep ttt:
+
+θt=U(θt−1,xt),\theta_t = \mathcal U(\theta_{t-1},x_t),θt​=U(θt−1​,xt​),
+
+and
+
+yt=G(qt,θt),y_t = \mathcal G(q_t,\theta_t),yt​=G(qt​,θt​),
+
+where:
+
+U\mathcal UU is the memory update function,
+G\mathcal GG is the reasoning operator,
+qtq_tqt​ is the query,
+yty_tyt​ is the output.
+5. Continual Parameter Adaptation
+5.1 Online Memory Update
+
+Each observation generates a parameter adjustment:
+
+Δθt=−η∇θLmem(xt,θt),\Delta \theta_t = -\eta \nabla_\theta \mathcal L_{mem}(x_t,\theta_t),Δθt​=−η∇θ​Lmem​(xt​,θt​),
+
+where:
+
+η\etaη is the adaptation rate,
+Lmem\mathcal L_{mem}Lmem​ is a memory learning objective.
+
+Memory evolves according to:
+
+θt+1=θt+Δθt.\theta_{t+1} = \theta_t + \Delta\theta_t.θt+1​=θt​+Δθt​.
+
+The resulting parameters become a compressed memory representation of accumulated experience.
+
+5.2 Memory Consolidation
+
+Instead of preserving
+
+x1,x2,…,xt,x_1,x_2,\ldots,x_t,x1​,x2​,…,xt​,
+
+the system preserves
+
+θt.\theta_t.θt​.
+
+This produces a memory transformation:
+
+{xi}i=1t→θt.\{x_i\}_{i=1}^{t} \rightarrow \theta_t.{xi​}i=1t​→θt​.
+6. Dynamic Memory Reconstruction
+
+A query
+
+qqq
+
+is processed through the memory network:
+
+z=fθt(q).z = f_{\theta_t}(q).z=fθt​​(q).
+
+The resulting latent memory representation
+
+zzz
+
+encodes information relevant to the query.
+
+Unlike retrieval-augmented systems, memory retrieval becomes a generative operation:
+
+Memory=fθt(q),\text{Memory} = f_{\theta_t}(q),Memory=fθt​​(q),
+
+rather than
+
+Memory=Retrieve Tokens.\text{Memory} = \text{Retrieve Tokens}.Memory=Retrieve Tokens.
+7. Dynamic Routing
+
+Memory may be partitioned into specialized modules:
+
+Θ={θ1,θ2,…,θm}.\Theta = \{\theta_1,\theta_2,\ldots,\theta_m\}.Θ={θ1​,θ2​,…,θm​}.
+
+A routing network generates:
+
+π(q)=softmax(R(q)).\pi(q) = \mathrm{softmax}(R(q)).π(q)=softmax(R(q)).
+
+Memory retrieval becomes:
+
+z(q)=∑i=1mπi(q)fθi(q).z(q) = \sum_{i=1}^{m} \pi_i(q) f_{\theta_i}(q).z(q)=i=1∑m​πi​(q)fθi​​(q).
+
+This resembles conditional computation but operates over memory adaptation rather than expert activation.
+
+8. Information-Theoretic Formulation
+8.1 Retained Information
+
+Define historical information:
+
+H=(x1,x2,…,xn).H = (x_1,x_2,\ldots,x_n).H=(x1​,x2​,…,xn​).
+
+Retained information in parameter memory is:
+
+I(H;θ),I(H;\theta),I(H;θ),
+
+where III denotes mutual information.
+
+The central theoretical objective is:
+
+max⁡I(H;θ)\max I(H;\theta)maxI(H;θ)
+
+subject to
+
+∣θ∣≪∣H∣.|\theta| \ll |H|.∣θ∣≪∣H∣.
+8.2 Memory Compression Ratio
+
+Define:
+
+ρ=∣H∣∣θ∣.\rho = \frac{|H|} {|\theta|}.ρ=∣θ∣∣H∣​.
+
+Larger values of
+
+ρ\rhoρ
+
+indicate stronger compression.
+
+The desired regime is:
+
+ρ≫1\rho \gg 1ρ≫1
+
+while preserving useful retrieval accuracy.
+
+9. Complexity Analysis
+9.1 Standard Transformer
+
+Memory complexity:
+
+MKV=O(nLd).M_{KV} = \mathcal O(nLd).MKV​=O(nLd).
+
+As
+
+n→∞,n\to\infty,n→∞,
+
+memory consumption grows unbounded.
+
+9.2 PMA
+
+Parameter memory:
+
+MPMA=O(P),M_{PMA} = \mathcal O(P),MPMA​=O(P),
+
+where
+
+P=∣θ∣.P = |\theta|.P=∣θ∣.
+
+Because PPP is independent of sequence length:
+
+∂MPMA∂n=0.\frac{\partial M_{PMA}} {\partial n} = 0.∂n∂MPMA​​=0.
+Proposition 1
+
+Under fixed memory parameter size,
+
+MPMAM_{PMA}MPMA​
+
+is independent of context length.
+
+Proof:
+
+Since
+
+MPMA=O(P)M_{PMA} = O(P)MPMA​=O(P)
+
+and PPP does not depend on nnn,
+
+lim⁡n→∞MPMAMKV=0.\lim_{n\to\infty} \frac{M_{PMA}} {M_{KV}} = 0.n→∞lim​MKV​MPMA​​=0.
+
+∎
+
+10. Experimental Predictions
+
+PMA produces several testable hypotheses.
+
+H1
+
+Adaptive parameter memory can achieve retrieval performance comparable to token retention.
+
+H2
+
+Memory complexity remains bounded as context length increases.
+
+H3
+
+Reasoning performance degrades more slowly than attention-based architectures under extreme context lengths.
+
+H4
+
+Memory quality depends primarily on parameter adaptation quality rather than retained token count.
+
+11. Limitations
+
+This work is currently a theoretical framework.
+
+Several challenges remain:
+
+Catastrophic forgetting.
+Stability of continual updates.
+Information capacity limits.
+Parameter interference.
+Convergence guarantees.
+
+Additionally, token retention may preserve exact information unavailable under lossy parameter compression.
+
+Whether adaptive parameters can asymptotically approach token memory remains an open empirical question.
+
+12. Conclusion
+
+This paper introduces Parametric Memory Alignment (PMA), a new framework built upon a simple but fundamental proposition:
+
+Memory should be represented by adaptive parameters rather than preserved tokens.
+
+Instead of extending context windows or improving token storage mechanisms, PMA reframes long-context reasoning as a continual parameter adaptation problem.
+
+The resulting Hypercycle Transformer architecture separates reasoning from memory formation and proposes a parameter-centric alternative to token-centric memory systems.
+
+If validated empirically, PMA suggests a future direction in which scaling intelligence depends less on retaining ever larger contexts and more on constructing increasingly effective adaptive memory mechanisms.
+
+References
+Vaswani, A., Shazeer, N., Parmar, N., et al. (2017). Attention Is All You Need. NeurIPS. DOI: 10.48550/arXiv.1706.03762.
+Bulatov, A., Kuratov, Y., & Burtsev, M. (2022). Recurrent Memory Transformer. NeurIPS 2022. DOI: 10.52202/068431-0805.
+Munkhdalai, T., Faruqui, M., & Gopal, S. (2024). Leave No Context Behind: Efficient Infinite Context Transformers with Infini-attention. DOI: 10.48550/arXiv.2404.07143.
+Behrouz, A., Zhong, P., & Mirrokni, V. (2025). Titans: Learning to Memorize at Test Time. DOI: 10.48550/arXiv.2501.00663.
+Sun, Q., Cetin, E., & Tang, Y. (2025). Transformer-Squared: Self-Adaptive LLMs. ICLR 2025. DOI: 10.48550/arXiv.2501.06252.
